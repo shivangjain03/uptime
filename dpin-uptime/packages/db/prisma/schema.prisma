@@ -14,10 +14,42 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        String   @id @default(uuid())
+  email     String  
+  //Setting up multiple websites for a user ie: one to many relationship
+}
+
+model Website{
+  id        String   @id @default(uuid())
+  url       String   
+  userId    String
+  ticks     WebsiteTick[]
+
+}
+
+model Validator{
+  id        String   @id @default(uuid())
+  publicKey String
+  location  String
+  ip        String
+  ticks     WebsiteTick[]
+}
+
+model WebsiteTick{
+  id          String   @id @default(uuid())
+  //taking the website id from the website model
+  websiteId   String
+  validorId   String
+  createdAt   DateTime @default(now())
+  status      WebsiteStatus
+  latency     Float 
+  //setting up the relatyionship for the foreign keys
+  website     Website  @relation(fields: [websiteId], references: [id])
+  validator   Validator @relation(fields: [validorId], references: [id])
+
+}
+
+enum WebsiteStatus{
+  UP
+  DOWN
 }
