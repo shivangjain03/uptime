@@ -19,13 +19,53 @@ app.post('/api/v1/website', authMiddleware, async (req, res) => {
     })
 });
 
-app.get('/api/v1/status', authMiddleware, (req, res) => {
+app.get('/api/v1/status', authMiddleware, async (req, res) => {
+    const websiteId = req.query.websiteId! as unknown as string;
+    const userId = req.userId!;
+    const data = await prismaClient.website.findFirst({
+        where: {
+            id: websiteId,
+            userId,
+            disabled: false
+        },
+        include : {
+            ticks: true
+        }   
+    })
+    res.json(data)
 });
 
-app.get('/api/v1/websites', authMiddleware, (req, res) => {
+app.get('/api/v1/websites', authMiddleware, async (req, res) => {
+    const userId = req.userId!;
+
+
+    const website = await prismaClient.website.findMany({
+        where: {
+            userId,
+            disabled: false
+        }
+    })
+    res.json({website})
+
+
 });
 
-app.delete('/api/v1/website/', authMiddleware, (req, res) => {
+app.delete('/api/v1/website/', authMiddleware, async (req, res) => {
+    const websiteId = req.body.websiteId;
+    const userId = req.userId!;
+
+    await prismaClient.website.update({
+        where: {
+            id: websiteId,
+            userId
+        },
+        data: {
+            disabled: true
+        }
+    })
+    res.json({
+        message: "Website deleted"
+    })
 });
 
 app.listen(3000);
