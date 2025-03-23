@@ -1,15 +1,41 @@
+"use client";
+import { API_BACKEND_URL } from "@/config";
 import { useAuth } from "@clerk/clerk-react";
 import axios from "axios";
-import { use, useEffect } from "react";
+import { use, useEffect, useState } from "react";
+
+interface Website {
+    id: string;
+    url: string;
+    ticks: {
+        id: string;
+        createdAt: string;
+        status: string;
+        latency: number;
+    }[]; 
+}
 
 export function useWebsites() {
-    const {getAuth} = useAuth();
-    useEffect(() => {  
-        const auth = getAuth();
-        axios.get(`${API_BACKEND_URL}/api/v1/websites`, {
+    const {getToken} = useAuth();
+    const [websites, setWebsites] = useState<Website[]>([]);
+
+
+    async function refreshWebsites() {
+        const token = await getToken();
+        const response = await axios.get(`${API_BACKEND_URL}/api/v1/websites`, {
             headers: {
-                Authorization: `Bearer ${auth.sessionClaims?.sub}`,
+                Authorization: token,
             },
         });
-     } , []);    
+        setWebsites(response.data.website);
+    
+    }
+    useEffect(() => {  
+        refreshWebsites();
+        const interval = setInterval(() => {
+            refreshWebsites();
+        }, 1000*60*1);
+        return () => clearInterval(interval);
+    }, []);    
+    return websites;
 }
